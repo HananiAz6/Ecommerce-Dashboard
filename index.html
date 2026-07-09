@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Commerce Strategy Dashboard</title>
+
+  <!-- Tailwind CDN — fine for dev; swap for a compiled build before final submission -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- D3 v7 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <link rel="stylesheet" href="./css/tokens.css" />
+</head>
+<body data-profile="adult" class="min-h-screen">
+
+  <header class="flex items-center justify-between px-6 py-4 border-b" style="border-color: var(--grid-line);">
+    <h1 class="text-xl font-bold" style="font-size: calc(1.25rem * var(--font-scale));">
+      E-Commerce Strategy Dashboard
+    </h1>
+
+    <!-- profile-mode-selector: the single control that drives everything -->
+    <select id="profile-mode-selector"
+      class="border rounded px-3 py-2 bg-transparent"
+      style="border-color: var(--grid-line); min-height: var(--tap-target-min);">
+      <option value="adult">Adult Mode</option>
+      <option value="child">Early Childhood Mode</option>
+      <option value="elderly">Elderly Mode</option>
+    </select>
+  </header>
+
+  <main class="p-6">
+    <!-- CHECKPOINT 1: just prove the data pipeline works -->
+    <div id="kpi-row" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <!-- KPI cards get mounted here by main.js -->
+    </div>
+
+    <div id="status" class="text-sm" style="color: var(--text-secondary);">Loading data…</div>
+
+    <div class="flex flex-col md:flex-row gap-6 mt-4">
+      <div id="sidebar-filters" class="w-full md:w-72 shrink-0"></div>
+      <div id="dashboard-grid" class="flex-1 grid gap-4"></div>
+    </div>
+
+    <div id="timeline-section" class="mt-6"></div>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+/* css/tokens.css
+   Each profile mode sets these custom properties on <body data-profile="...">.
+   Charts and components read var(--...) instead of hardcoded values, so
+   switching profile never means touching chart code — only these tokens. */
+
+:root {
+  --font-scale: 1;
+  --tap-target-min: 40px;
+}
+
+body[data-profile="adult"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --accent: #38bdf8;
+  --accent-warm: #fb923c;
+  --grid-line: #334155;
+  --font-scale: 1;
+  --tap-target-min: 32px;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --chart-gap: 1.5rem;
+}
+
+body[data-profile="elderly"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #1a1a1a;
+  --accent: #0047ab;
+  --accent-warm: #b3400e;
+  --grid-line: #000000;
+  --font-scale: 1.6;
+  --tap-target-min: 56px;
+  --font-body: 'Atkinson Hyperlegible', Arial, sans-serif;
+  --chart-gap: 2.5rem;
+}
+
+body[data-profile="elderly"] .chart-card {
+  & .chart-title {
+    font-size: calc(1.0rem * var(--font-scale)) !important; 
+  }
+  & .flex.gap-4 span {
+    font-size: calc(rem * var(--font-scale)) !important;
+  }
+  & svg g.milestone-node text {
+    font-size: calc(0.55rem * var(--font-scale)) !important; /* Forces the overlapping words to scale down */
+  }
+}
+
+body[data-profile="child"] {
+  --bg: #fff9e6;
+  --surface: #ffffff;
+  --text-primary: #22223b;
+  --text-secondary: #4a4a68;
+  --accent: #ff6b6b;
+  --accent-warm: #ffd93d;
+  --grid-line: #e0e0e0;
+  --font-scale: 1.3;
+  --tap-target-min: 72px;
+  --font-body: 'Baloo 2', 'Comic Sans MS', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  transition: background 0.2s ease, color 0.2s ease;
+  /* Native <select> dropdown popups render with OS-level white chrome on most
+   browsers regardless of our dark theme tokens — so <option> text must be
+   explicitly dark, or it's invisible until the browser's own hover/selected
+   highlight happens to give it contrast. */
+  select option {
+    color: #111827;
+    background: #ffffff;
+  }
+}

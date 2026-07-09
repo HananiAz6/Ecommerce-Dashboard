@@ -1,0 +1,107 @@
+// js/charts/fulfillment.js
+import { deliveryStatusBreakdown } from '../data/aggregate.js';
+import { createTooltip } from '../utils/tooltip.js';
+
+const STATUS_COLORS = {
+  Delivered: '#34d399',
+  'In Transit': '#fbbf24',
+  Returned: '#f87171',
+  Unknown: '#94a3b8',
+};
+
+export function createFulfillmentChart(container, data, config = {}) {
+  const title = config.title ?? 'Fulfillment Logistics';
+
+  const wrapper = d3.select(container)
+    .attr('class', 'chart-card rounded-lg p-4')
+    .style('background', 'var(--surface)')
+    .style('border', '1px solid var(--grid-line)');
+
+  wrapper.append('div')
+    .attr('class', 'chart-title font-semibold mb-2')
+    .style('color', 'var(--text-primary)')
+    .style('font-size', 'calc(1rem * var(--font-scale))')
+    .text(title);
+
+  const chartBox = wrapper.append('div')
+    .style('position', 'relative')
+    .style('display', 'flex')
+    .style('align-items', 'center')
+    .style('gap', '16px');
+
+  const width = config.width ?? 220;
+  const height = config.height ?? 200;
+  const radius = Math.min(width, height) / 2 - 10;
+
+  const svg = chartBox.append('svg')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('width', '100%')
+    .attr('height', 'auto')
+    .style('max-width', '200px');
+
+  const g = svg.append('g').attr('transform', `translate(${width / 2},${height / 2})`);
+  const legend = chartBox.append('div').attr('class', 'flex flex-col gap-2');
+  const tooltip = createTooltip(chartBox.node());
+
+  const pie = d3.pie().value((d) => d[1]).sort(null);
+  const arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius);
+
+  function render(newData) {
+    const breakdown = deliveryStatusBreakdown(newData); // [ [status, count], ... ]
+    const total = d3.sum(breakdown, (d) => d[1]) || 1;
+    const arcs = pie(breakdown);
+
+    const paths = g.selectAll('path').data(arcs, (d) => d.data[0]);
+    paths.exit().remove();
+
+    paths.enter()
+      .append('path')
+      .attr('fill', (d) => STATUS_COLORS[d.data[0]] ?? '#ccc')
+      .merge(paths)
+      .on('mouseover', function (event, d) {
+        d3.select(this).style('opacity', 0.75);
+        const [x, y] = d3.pointer(event, chartBox.node());
+        const pct = ((d.data[1] / total) * 100).toFixed(1);
+        tooltip.show(`<strong>${d.data[0]}</strong><br/>${d.data[1]} orders (${pct}%)`, [x, y]);
+      })
+      .on('mouseout', function () {
+        d3.select(this).style('opacity', 1);
+        tooltip.hide();
+      })
+      .transition().duration(400)
+      .attrTween('d', function (d) {
+        const interp = d3.interpolate(this._current || d, d);
+        this._current = interp(1);
+        return (t) => arc(interp(t));
+      });
+
+    const legendItems = legend.selectAll('.legend-row').data(breakdown, (d) => d[0]);
+    legendItems.exit().remove();
+
+    const entered = legendItems.enter()
+      .append('div')
+      .attr('class', 'legend-row flex items-center gap-2');
+    entered.append('span').attr('class', 'swatch').style('width', '10px').style('height', '10px').style('border-radius', '50%');
+    entered.append('span').attr('class', 'label-text');
+
+    const merged = entered.merge(legendItems);
+    merged.select('.swatch').style('background', (d) => STATUS_COLORS[d[0]] ?? '#ccc');
+    merged.select('.label-text')
+      .style('font-size', 'calc(0.8rem * var(--font-scale))')
+      .style('color', 'var(--text-secondary)')
+      .text((d) => `${d[0]}: ${d[1]} (${((d[1] / total) * 100).toFixed(0)}%)`);
+  }
+
+  render(data);
+
+  function update(newData) {
+    render(newData);
+  }
+
+  function destroy() {
+    tooltip.destroy();
+    wrapper.selectAll('*').remove();
+  }
+
+  return { update, destroy };
+}
