@@ -1,0 +1,23 @@
+# Ignore Windows / WSL Alternate Data Stream metadata files (CRITICAL for your project)
+*:Zone.Identifier
+*.Zone.Identifier
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Common node environment folder (just in case you use it later)
+node_modules/
+dist/
+.env
+
+# IDE and Code Editors configs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
