@@ -43,65 +43,80 @@ export function createFulfillmentChart(container, data, config = {}) {
   const legend = chartBox.append('div').attr('class', 'flex flex-col gap-2');
   const tooltip = createTooltip(chartBox.node());
 
-  const pie = d3.pie().value((d) => d[1]).sort(null);
+  // Standard Arc Configuration
   const arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius);
+  
+  // ADDED: Hover Arc Configuration that expands the outer radius by 6 pixels
+  const arcHover = d3.arc().innerRadius(radius * 0.55).outerRadius(radius + 6);
+
+  const pie = d3.pie().value((d) => d[1]).sort(null); //
 
   function render(newData) {
-    const breakdown = deliveryStatusBreakdown(newData); // [ [status, count], ... ]
-    const total = d3.sum(breakdown, (d) => d[1]) || 1;
-    const arcs = pie(breakdown);
+    const breakdown = deliveryStatusBreakdown(newData); //
+    const total = d3.sum(breakdown, (d) => d[1]) || 1; //
+    const arcs = pie(breakdown); //
 
-    const paths = g.selectAll('path').data(arcs, (d) => d.data[0]);
-    paths.exit().remove();
+    const paths = g.selectAll('path').data(arcs, (d) => d.data[0]); //
+    paths.exit().remove(); //
 
     paths.enter()
       .append('path')
-      .attr('fill', (d) => STATUS_COLORS[d.data[0]] ?? '#ccc')
+      .attr('fill', (d) => STATUS_COLORS[d.data[0]] ?? '#ccc') //
       .merge(paths)
       .on('mouseover', function (event, d) {
-        d3.select(this).style('opacity', 0.75);
-        const [x, y] = d3.pointer(event, chartBox.node());
-        const pct = ((d.data[1] / total) * 100).toFixed(1);
-        tooltip.show(`<strong>${d.data[0]}</strong><br/>${d.data[1]} orders (${pct}%)`, [x, y]);
+        // HIGHLIGHT: Smoothly expand the radius and adjust opacity on hover
+        d3.select(this)
+          .transition().duration(200)
+          .attr('d', arcHover)
+          .style('opacity', 0.9);
+
+        const [x, y] = d3.pointer(event, chartBox.node()); //
+        const pct = ((d.data[1] / total) * 100).toFixed(1); //
+        tooltip.show(`<strong>${d.data[0]}</strong><br/>${d.data[1]} orders (${pct}%)`, [x, y]); //
       })
       .on('mouseout', function () {
-        d3.select(this).style('opacity', 1);
-        tooltip.hide();
+        // HIGHLIGHT: Smoothly return back to the standard base arc radius
+        d3.select(this)
+          .transition().duration(200)
+          .attr('d', arc)
+          .style('opacity', 1);
+
+        tooltip.hide(); //
       })
-      .transition().duration(400)
-      .attrTween('d', function (d) {
-        const interp = d3.interpolate(this._current || d, d);
-        this._current = interp(1);
-        return (t) => arc(interp(t));
+      .transition().duration(400) //
+      .attrTween('d', function (d) { //
+        const interp = d3.interpolate(this._current || d, d); //
+        this._current = interp(1); //
+        return (t) => arc(interp(t)); //
       });
 
-    const legendItems = legend.selectAll('.legend-row').data(breakdown, (d) => d[0]);
-    legendItems.exit().remove();
+    const legendItems = legend.selectAll('.legend-row').data(breakdown, (d) => d[0]); //
+    legendItems.exit().remove(); //
 
-    const entered = legendItems.enter()
-      .append('div')
-      .attr('class', 'legend-row flex items-center gap-2');
-    entered.append('span').attr('class', 'swatch').style('width', '10px').style('height', '10px').style('border-radius', '50%');
-    entered.append('span').attr('class', 'label-text');
+    const entered = legendItems.enter() //
+      .append('div') //
+      .attr('class', 'legend-row flex items-center gap-2'); //
+    entered.append('span').attr('class', 'swatch').style('width', '10px').style('height', '10px').style('border-radius', '50%'); //
+    entered.append('span').attr('class', 'label-text'); //
 
-    const merged = entered.merge(legendItems);
-    merged.select('.swatch').style('background', (d) => STATUS_COLORS[d[0]] ?? '#ccc');
-    merged.select('.label-text')
-      .style('font-size', 'calc(0.8rem * var(--font-scale))')
-      .style('color', 'var(--text-secondary)')
-      .text((d) => `${d[0]}: ${d[1]} (${((d[1] / total) * 100).toFixed(0)}%)`);
+    const merged = entered.merge(legendItems); //
+    merged.select('.swatch').style('background', (d) => STATUS_COLORS[d[0]] ?? '#ccc'); //
+    merged.select('.label-text') //
+      .style('font-size', 'calc(0.8rem * var(--font-scale))') //
+      .style('color', 'var(--text-secondary)') //
+      .text((d) => `${d[0]}: ${d[1]} (${((d[1] / total) * 100).toFixed(0)}%)`); //
   }
 
-  render(data);
+  render(data); //
 
-  function update(newData) {
-    render(newData);
-  }
+  function update(newData) { //
+    render(newData); //
+  } //
 
-  function destroy() {
-    tooltip.destroy();
-    wrapper.selectAll('*').remove();
-  }
+  function destroy() { //
+    tooltip.destroy(); //
+    wrapper.selectAll('*').remove(); //
+  } //
 
-  return { update, destroy };
+  return { update, destroy }; //
 }

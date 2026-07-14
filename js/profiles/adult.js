@@ -20,27 +20,37 @@ export function mount(els, rawData, filteredData) {
   const mounts = [];
 
   const filters = createSidebarFilters(els.sidebarEl, rawData, { largeTargets: false });
-  mounts.push({ update: () => {}, destroy: filters.destroy }); // filters don't redraw on data change
+  mounts.push({ update: () => {}, destroy: filters.destroy }); 
 
   const kpis = createKpiCards(els.kpiEl, filteredData, { labels: ADULT_LABELS });
   mounts.push(kpis);
 
-  els.gridEl.className = 'mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
+  // Keep the flex-1 preservation configuration
+  els.gridEl.className = 'flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4';
 
-  // All 6 required charts. Order here = visual order in the grid.
+  // REARRANGED ORDER: Moved createScatterMatrix to the very bottom so it appends last
   const chartFactories = [
-    createRevenueTrendChart,
-    createFulfillmentChart,
-    createSalesByCategoryChart,
-    createCustomerSegmentsChart,
-    createScatterMatrix,
-    createRegionalHeatmap,
+    { factory: createRevenueTrendChart, isScatter: false },
+    { factory: createFulfillmentChart, isScatter: false },
+    { factory: createSalesByCategoryChart, isScatter: false },
+    { factory: createCustomerSegmentsChart, isScatter: false },
+    { factory: createRegionalHeatmap, isScatter: false },     // Heatmap renders first
+    { factory: createScatterMatrix, isScatter: true },        // Scatter plot renders last (below)
   ];
 
-  chartFactories.forEach((factory) => {
+  chartFactories.forEach(({ factory, isScatter }) => {
     const card = document.createElement('div');
-    els.gridEl.appendChild(card);
-    mounts.push(factory(card, filteredData));
+    
+    if (isScatter) {
+      card.className = 'col-span-1 md:col-span-2 xl:col-span-3 w-full clear-both';
+      card.style.gridColumn = '1 / -1'; 
+      els.gridEl.appendChild(card);
+      mounts.push(factory(card, filteredData, { width: 850, height: 380 }));
+    } else {
+      card.className = 'w-full';
+      els.gridEl.appendChild(card);
+      mounts.push(factory(card, filteredData));
+    }
   });
 
   mounts.push(createTimeline(els.timelineEl, { largeMode: false }));

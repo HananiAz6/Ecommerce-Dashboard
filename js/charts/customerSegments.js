@@ -22,7 +22,7 @@ export function createCustomerSegmentsChart(container, data, config = {}) {
   const chartBox = wrapper.append('div').style('position', 'relative');
 
   const width = config.width ?? 420;
-  const height = config.height ?? 260;
+  const height = config.height ?? 370;
   const innerW = width - MARGIN.left - MARGIN.right;
   const innerH = height - MARGIN.top - MARGIN.bottom;
 
